@@ -2,7 +2,6 @@
 __author__ = 'Ilia Shakitko'
 
 import xml.etree.ElementTree as ET
-from xml.dom.minidom import parseString
 import argparse
 import PIParser
 import subprocess
@@ -29,20 +28,23 @@ def process_dom_rows(rows, rra_index, strategy, dom_xml_filedata):
     if one_point_offset == 0:
         one_point_offset = 1
 
-    print 'Processing rows of rra#%s with strategy: %s\n[' % (rra_index, strategy),
+    print('Processing rows of rra#%s with strategy: %s\n[' % (rra_index, strategy)),
     for row_index, row in enumerate(rows):
-        filedata_items = {0:[], 1:[], 2:[]}
+        # there are 3 items in each row
+        filedata_items = {0: [], 1: [], 2: []}
+
+        # go thru file list and pick up 3 values from respective row
         for file in args.files:
             tree = dom_xml_filedata[file]
             rra = tree.findall('rra')
             subfile_rows = rra[rra_index].find('database').findall('row')
 
-            #fill the array
+            # append values to 3 lists
             filedata_items[0].append(float(subfile_rows[row_index][0].text))
             filedata_items[1].append(float(subfile_rows[row_index][1].text))
             filedata_items[2].append(float(subfile_rows[row_index][2].text))
 
-        # change summary values
+        # replace summary values for 3 items of the row with aggregated value
         row[0].text = '%.10e' % apply_strategy(filedata_items[0], strategy)
         row[1].text = '%.10e' % apply_strategy(filedata_items[1], strategy)
         row[2].text = '%.10e' % apply_strategy(filedata_items[2], strategy)
@@ -60,17 +62,17 @@ def main():
     files = args.files
     summary_file_name = args.summary
 
-    # exit if no files proveded
+    # exit if no files provided
     if len(args.files) == 0:
         print('No files specified')
         exit(1)
 
     ## read all files
-    print 'Reading and parsing files ...\n'
+    print('Reading and parsing files ...\n')
     for filename in files:
-        print 'parsing file %s' % filename
+        print('parsing file %s' % filename)
         dom_xml_filedata[filename] = ET.parse(filename)
-    print '\nFiles has been parsed. Begin aggregation...\n'
+    print('\nFiles has been parsed. Begin aggregation...\n')
 
     #copy first file as summary
     subprocess.call(['cp', files[0], summary_file_name])
@@ -88,10 +90,11 @@ def main():
         #iterate over each "row" node
         process_dom_rows(rows=rows, rra_index=rra_index, strategy=strategy.text.lower(), dom_xml_filedata=dom_xml_filedata)
         print('%s rows of rra node#%s has been processed\n' % (len(rows), rra_index))
-    print '-----------------------------------------------------\n', 'All rra records has been proceessed\n', '-----------------------------------------------------\n'
+    print('-----------------------------------------------------\n')
+    print('All rra records has been proceessed\n')
 
     # save summary tree to the file
-    print 'Saving data to file'
+    print('Saving data to file')
     file_handle = open(summary_file_name, "wb")
     file_handle.write(
         '<?xml version="1.0" encoding="utf-8"?>\n' +
@@ -100,7 +103,7 @@ def main():
         ET.tostring(tree.getroot())
     )
     file_handle.close()
-    print 'file saved'
+    print('Data saved')
 
 if __name__ == '__main__':
     main()
