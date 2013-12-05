@@ -14,15 +14,6 @@ p.add_argument('files', metavar='FILENAME', type=str, nargs='+', help='RRD xml f
 p.add_argument('--summary', '-s', type=str, default='summary.xml', help='Output file name (default "summary.xml")')
 args = p.parse_args()
 
-def apply_strategy(items_list, strategy):
-    if strategy == 'average':
-        return sum(items_list)/len(items_list)
-    elif strategy == 'max':
-        return max(items_list)
-    else:
-        return min(items_list)
-
-
 def process_dom_rows(rows, rra_index, strategy, dom_xml_filedata):
     one_point_offset = int(len(rows)/100);
     if one_point_offset == 0:
@@ -45,9 +36,9 @@ def process_dom_rows(rows, rra_index, strategy, dom_xml_filedata):
             filedata_items[2].append(float(subfile_rows[row_index][2].text))
 
         # replace summary values for 3 items of the row with aggregated value
-        row[0].text = '%.10e' % apply_strategy(filedata_items[0], strategy)
-        row[1].text = '%.10e' % apply_strategy(filedata_items[1], strategy)
-        row[2].text = '%.10e' % apply_strategy(filedata_items[2], strategy)
+        row[0].text = '%.10e' % sum(filedata_items[0])
+        row[1].text = '%.10e' % sum(filedata_items[1])
+        row[2].text = '%.10e' % sum(filedata_items[2])
 
         # print process if applicable
         if row_index%one_point_offset == 0:
