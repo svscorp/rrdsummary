@@ -7,6 +7,7 @@ import PIParser
 import subprocess
 import sys
 import math
+import time
 
 # Parsing arguments
 p = argparse.ArgumentParser(description="Summarise given rrd reports and saves result into a file")
@@ -24,6 +25,7 @@ def process_dom_rows(rows, rra_index, strategy, dom_xml_filedata):
     if one_point_offset == 0:
         one_point_offset = 1
 
+    rra_start_time = time.time()
     print('Processing rows of rra#%s with strategy: %s\n[' % (rra_index, strategy)),
     for row_index, row in enumerate(rows):
         # there are 3 items in each row
@@ -50,10 +52,10 @@ def process_dom_rows(rows, rra_index, strategy, dom_xml_filedata):
             sys.stdout.write('.')
             sys.stdout.flush()
 
-    print(']\n')
-
+    print('] %.2f sec\n' % (time.time() - rra_start_time))
 
 def main():
+    script_start_time = time.time()
     dom_xml_filedata = {}
     files = args.files
     summary_file_name = args.summary
@@ -99,7 +101,7 @@ def main():
         ET.tostring(tree.getroot())
     )
     file_handle.close()
-    print('Data saved')
+    print('Data saved. Script execution time: %.2f sec' % (time.time() - script_start_time))
 
 if __name__ == '__main__':
     main()
