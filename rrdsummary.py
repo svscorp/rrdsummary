@@ -1,11 +1,12 @@
 #!/usr/bin/python -tt
 __author__ = 'Ilia Shakitko'
 
-import xml.etree.ElementTree as ET
+import xml.etree.cElementTree as ET
 import argparse
 import PIParser
 import subprocess
 import sys
+import math
 
 # Parsing arguments
 p = argparse.ArgumentParser(description="Summarise given rrd reports and saves result into a file")
@@ -13,6 +14,10 @@ p.add_argument('files', metavar='FILENAME', type=str, nargs='+', help='RRD xml f
                                                                       ' must be located in the same folder)')
 p.add_argument('--summary', '-s', type=str, default='summary.xml', help='Output file name (default "summary.xml")')
 args = p.parse_args()
+
+def isnan_check(value):
+    float_value = float(value.text)
+    return 0 if math.isnan(float_value) else float_value
 
 def process_dom_rows(rows, rra_index, strategy, dom_xml_filedata):
     one_point_offset = int(len(rows)/100);
@@ -31,9 +36,9 @@ def process_dom_rows(rows, rra_index, strategy, dom_xml_filedata):
             subfile_rows = rra[rra_index].find('database').findall('row')
 
             # append values to 3 lists
-            filedata_items[0].append(float(subfile_rows[row_index][0].text))
-            filedata_items[1].append(float(subfile_rows[row_index][1].text))
-            filedata_items[2].append(float(subfile_rows[row_index][2].text))
+            filedata_items[0].append(isnan_check(subfile_rows[row_index][0]))
+            filedata_items[1].append(isnan_check(subfile_rows[row_index][1]))
+            filedata_items[2].append(isnan_check(subfile_rows[row_index][2]))
 
         # replace summary values for 3 items of the row with aggregated value
         row[0].text = '%.10e' % sum(filedata_items[0])
